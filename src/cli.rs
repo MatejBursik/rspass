@@ -3,7 +3,7 @@ use clap::{Parser, Subcommand};
 #[derive(Parser)]
 pub struct Args {
     #[command(subcommand)]
-    pub command: Commands,
+    pub command: Commands
 }
 
 #[derive(Subcommand)]
@@ -15,12 +15,12 @@ pub enum Commands {
     Add {
         service: String, // Service name (github, email, ...)
         #[arg(short, long)]
-        password: Option<String>, // Password to store
+        password: Option<String> // Password to store
     },
     
     // Retrieve a password for a service
     Get {
-        service: String,
+        service: String
     },
     
     // List all stored service names
@@ -28,13 +28,13 @@ pub enum Commands {
     
     // Remove a password for a service
     Remove {
-        service: String,
+        service: String
     },
     
     // Update an existing password for a service
     Update {
         service: String,
         #[arg(short, long)]
-        password: Option<String>,
-    },
+        password: Option<String>
+    }
 }

@@ -6,18 +6,18 @@ A secure command-line password manager written in Rust, featuring encryption and
 
 ```bash
 git clone <repository-url>
-cd rpass
+cd rspass
 cargo build --release
 ```
 
-The binary will be available at `target/release/rpass`.
+The binary will be available at `target/release/rspass`.
 
 ## Usage
 
 ### Initialize a New Vault
 
 ```bash
-rpass init
+rspass init
 ```
 
 Creates a new encrypted password vault. You'll be prompted to set a master password.
@@ -26,38 +26,38 @@ Creates a new encrypted password vault. You'll be prompted to set a master passw
 
 ```bash
 # Interactive (prompts for password)
-rpass add github
+rspass add github
 
 # With password as argument (less secure - visible in shell history)
-rpass add github --password mySecretPassword123
+rspass add github --password mySecretPassword123
 ```
 
 ### Retrieve a Password
 
 ```bash
-rpass get github
+rspass get github
 ```
 
 ### List All Services
 
 ```bash
-rpass list
+rspass list
 ```
 
 ### Update a Password
 
 ```bash
 # Interactive
-rpass update github
+rspass update github
 
 # With password argument
-rpass update github --password newPassword456
+rspass update github --password newPassword456
 ```
 
 ### Remove a Password
 
 ```bash
-rpass remove github
+rspass remove github
 ```
 
 ## Disclaimer
