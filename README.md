@@ -28,7 +28,7 @@ Creates a new encrypted password vault. You'll be prompted to set a master passw
 # Interactive (prompts for password)
 rspass add github
 
-# With password as argument (less secure - visible in shell history)
+# With password as an argument (less secure - visible in shell)
 rspass add github --password mySecretPassword123
 ```
 
@@ -47,10 +47,10 @@ rspass list
 ### Update a Password
 
 ```bash
-# Interactive
+# Interactive (prompts for password)
 rspass update github
 
-# With password argument
+# With password as an argument (less secure - visible in shell)
 rspass update github --password newPassword456
 ```
 

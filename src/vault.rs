@@ -63,7 +63,7 @@ impl Vault {
         Ok(())
     }
 
-    // Save vault to disk
+    // Save vault
     pub fn save(&self, master_password: &str) -> Result<()> {
         let json_data = serde_json::to_vec(&self.data).context("Failed to serialize vault data")?;
         
@@ -72,6 +72,39 @@ impl Vault {
         let encrypted_json = serde_json::to_vec_pretty(&encrypted_data).context("Failed to serialize encrypted data")?;
         
         fs::write(&self.file_path, encrypted_json).context("Failed to write vault file")?;
+        
+        Ok(())
+    }
+
+    // Load vault
+    pub fn load(master_password: &str) -> Result<Self> {
+        let vault_path = Self::get_vault_path()?;
+        
+        if !vault_path.exists() {
+            anyhow::bail!("No vault found. Run 'rspass init' to create one.");
+        }
+        
+        let encrypted_content = fs::read(&vault_path).context("Failed to read vault file")?;
+        
+        let encrypted_data: EncryptedData = serde_json::from_slice(&encrypted_content).context("Failed to parse vault file")?;
+        
+        let decrypted_bytes = encrypted_data.decrypt(master_password).context("Failed to decrypt vault")?;
+        
+        let data: VaultData = serde_json::from_slice(&decrypted_bytes).context("Failed to parse decrypted vault data")?;
+        
+        Ok(Vault {
+            data,
+            file_path: vault_path
+        })
+    }
+
+    // Add a password for a service
+    pub fn add_password(&mut self, service: &str, password: &str) -> Result<()> {
+        if self.data.entries.contains_key(service) {
+            anyhow::bail!("Password for '{}' already exists. Use 'update' to modify it.", service);
+        }
+        
+        self.data.entries.insert(service.to_string(), password.to_string());
         
         Ok(())
     }

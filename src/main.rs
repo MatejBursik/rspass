@@ -11,14 +11,18 @@ use rpassword::read_password;
 use std::io::{self, Write};
 use zeroize::Zeroize;
 
-fn prompt_master_password(prompt: &str) -> Result<String> {
+fn prompt_password(prompt: &str, is_master: bool) -> Result<String> {
     print!("{}", prompt);
     
     io::stdout().flush()?;
     let mut password = read_password()?;
     
     if password.is_empty() {
-        anyhow::bail!("Master password cannot be empty");
+        if is_master {
+            anyhow::bail!("Master password cannot be empty");
+        }
+        
+        anyhow::bail!("Password cannot be empty");
     }
     
     // Ensure we have a proper string that will be zeroized
@@ -35,15 +39,26 @@ fn main()-> Result<()> {
         Commands::Init => {
             println!("Initializing new password vault...");
 
-            let master_password = prompt_master_password("Enter master password: ")?;
+            let master_password = prompt_password("Enter master password: ", true)?;
             Vault::create_new(&master_password)?;
 
             println!("Vault created successfully!");
         }
 
         Commands::Add { service, password } => {
-            println!("Add new password");
+            let master_password = prompt_password("Enter master password: ", true)?;
+            let mut vault = Vault::load(&master_password)?;
             
+            let password = if let Some(pwd) = password {
+                pwd
+            } else {
+                prompt_password("Enter password to store: ", false)?
+            };
+            
+            vault.add_password(&service, &password)?;
+            vault.save(&master_password)?;
+
+            println!("Password added for '{}'", service);
         }
 
         Commands::Get { service } => {
