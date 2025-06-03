@@ -73,8 +73,18 @@ fn main()-> Result<()> {
         }
 
         Commands::List => {
-            println!("List all services with passwords");
-
+            let master_password = prompt_password("Enter master password: ", true)?;
+            let vault = Vault::load(&master_password)?;
+            
+            let services = vault.list_services();
+            if services.is_empty() {
+                println!("No passwords stored yet.");
+            } else {
+                println!("Stored services:");
+                for service in services {
+                    println!(" - {}", service);
+                }
+            }
         }
 
         Commands::Remove { service } => {

@@ -113,4 +113,9 @@ impl Vault {
     pub fn get_password(&self, service: &str) -> Option<&String> {
         self.data.entries.get(service)
     }
+
+    // List all service names
+    pub fn list_services(&self) -> Vec<&String> {
+        self.data.entries.keys().collect()
+    }
 }
