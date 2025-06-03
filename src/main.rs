@@ -62,8 +62,14 @@ fn main()-> Result<()> {
         }
 
         Commands::Get { service } => {
-            println!("Retrieve password");
-
+            let master_password = prompt_password("Enter master password: ", true)?;
+            let vault = Vault::load(&master_password)?;
+            
+            if let Some(password) = vault.get_password(&service) {
+                println!("Password for '{}': {}", service, password);
+            } else {
+                println!("No password found for '{}'", service);
+            }
         }
 
         Commands::List => {

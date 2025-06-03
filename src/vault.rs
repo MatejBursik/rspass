@@ -108,4 +108,9 @@ impl Vault {
         
         Ok(())
     }
+
+    // Get a password for a service
+    pub fn get_password(&self, service: &str) -> Option<&String> {
+        self.data.entries.get(service)
+    }
 }
