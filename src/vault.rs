@@ -123,4 +123,15 @@ impl Vault {
     pub fn remove_password(&mut self, service: &str) -> Result<bool> {
         Ok(self.data.entries.remove(service).is_some())
     }
+
+    // Update a password for a service
+    pub fn update_password(&mut self, service: &str, password: &str) -> Result<()> {
+        if !self.data.entries.contains_key(service) {
+            anyhow::bail!("No password found for '{}'. Use 'add' to create a new entry.", service);
+        }
+
+        self.data.entries.insert(service.to_string(), password.to_string());
+
+        Ok(())
+    }
 }

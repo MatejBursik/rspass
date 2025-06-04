@@ -32,7 +32,7 @@ fn prompt_password(prompt: &str, is_master: bool) -> Result<String> {
     Ok(result)
 }
 
-fn main()-> Result<()> {
+fn main() -> Result<()> {
     let args = Args::parse();
 
     match args.command {
@@ -100,8 +100,19 @@ fn main()-> Result<()> {
         }
 
         Commands::Update { service, password } => {
-            println!("Update password");
+            let master_password = prompt_password("Enter master password: ", true)?;
+            let mut vault = Vault::load(&master_password)?;
+            
+            let password = if let Some(pwd) = password {
+                pwd
+            } else {
+                prompt_password("Enter new password: ", false)?
+            };
+            
+            vault.update_password(&service, &password)?;
+            vault.save(&master_password)?;
 
+            println!("Password updated for '{}'", service);
         }
     }
 
