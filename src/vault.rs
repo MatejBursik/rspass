@@ -118,4 +118,9 @@ impl Vault {
     pub fn list_services(&self) -> Vec<&String> {
         self.data.entries.keys().collect()
     }
+
+    // Remove a password for a service
+    pub fn remove_password(&mut self, service: &str) -> Result<bool> {
+        Ok(self.data.entries.remove(service).is_some())
+    }
 }

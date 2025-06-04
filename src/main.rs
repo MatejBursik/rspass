@@ -78,7 +78,7 @@ fn main()-> Result<()> {
             
             let services = vault.list_services();
             if services.is_empty() {
-                println!("No passwords stored yet.");
+                println!("No passwords stored yet");
             } else {
                 println!("Stored services:");
                 for service in services {
@@ -88,8 +88,15 @@ fn main()-> Result<()> {
         }
 
         Commands::Remove { service } => {
-            println!("Remove password");
-
+            let master_password = prompt_password("Enter master password: ", true)?;
+            let mut vault = Vault::load(&master_password)?;
+            
+            if vault.remove_password(&service)? {
+                vault.save(&master_password)?;
+                println!("Password removed for '{}'", service);
+            } else {
+                println!("No password found for '{}'", service);
+            }
         }
 
         Commands::Update { service, password } => {
