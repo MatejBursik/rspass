@@ -1,6 +1,6 @@
 use aes_gcm::{
     aead::{Aead, AeadCore, KeyInit, OsRng},
-    Aes256Gcm, Key, Nonce
+    Aes256Gcm
 };
 use anyhow::{Context, Result};
 use argon2::{Argon2, PasswordHash, PasswordHasher, PasswordVerifier};
@@ -92,7 +92,7 @@ impl EncryptedData {
         let key = EncryptionKey::derive_from_password(password, &salt)?;
         
         // Create cipher
-        let cipher = Aes256Gcm::new(Key::<Aes256Gcm>::from_slice(key.as_ref()));
+        let cipher = Aes256Gcm::new(key.as_ref().into());
         
         // Generate nonce
         let nonce = Aes256Gcm::generate_nonce(&mut OsRng);
@@ -125,13 +125,13 @@ impl EncryptedData {
         let key = EncryptionKey::derive_from_password(password, &self.salt)?;
         
         // Create cipher
-        let cipher = Aes256Gcm::new(Key::<Aes256Gcm>::from_slice(key.as_ref()));
+        let cipher = Aes256Gcm::new(key.as_ref().into());
         
         // Create nonce
         if self.nonce.len() != 12 {
             anyhow::bail!("Invalid nonce length");
         }
-        let nonce = Nonce::from_slice(&self.nonce);
+        let nonce = self.nonce.as_slice().into();
         
         // Decrypt
         let plaintext = cipher

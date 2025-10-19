@@ -9,6 +9,7 @@ use anyhow::Result;
 use clap::Parser;
 use rpassword::read_password;
 use std::io::{self, Write};
+use std::process::{Command, Stdio};
 use zeroize::Zeroize;
 
 fn prompt_password(prompt: &str, is_master: bool) -> Result<String> {
@@ -32,6 +33,31 @@ fn prompt_password(prompt: &str, is_master: bool) -> Result<String> {
     Ok(result)
 }
 
+pub fn launch_ui() -> std::io::Result<()> {
+    #[cfg(target_os = "windows")]
+    {
+        use std::os::windows::process::CommandExt;
+        const CREATE_NEW_CONSOLE: u32 = 0x00000010;
+        Command::new("rspass-ui")
+            .creation_flags(CREATE_NEW_CONSOLE)
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .spawn()?;
+    }
+
+    #[cfg(not(target_os = "windows"))]
+    {
+        Command::new("sh")
+            .arg("-c")
+            .arg("rspass-ui & disown")
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .spawn()?;
+    }
+
+    Ok(())
+}
+
 fn main() -> Result<()> {
     let args = Args::parse();
 
@@ -45,7 +71,7 @@ fn main() -> Result<()> {
             println!("Vault created successfully!");
         }
 
-        Commands::Add { service, password } => {
+        Commands::Add {service, password} => {
             let master_password = prompt_password("Enter master password: ", true)?;
             let mut vault = Vault::load(&master_password)?;
             
@@ -61,7 +87,7 @@ fn main() -> Result<()> {
             println!("Password added for '{}'", service);
         }
 
-        Commands::Get { service } => {
+        Commands::Get {service} => {
             let master_password = prompt_password("Enter master password: ", true)?;
             let vault = Vault::load(&master_password)?;
             
@@ -87,7 +113,7 @@ fn main() -> Result<()> {
             }
         }
 
-        Commands::Remove { service } => {
+        Commands::Remove {service} => {
             let master_password = prompt_password("Enter master password: ", true)?;
             let mut vault = Vault::load(&master_password)?;
             
@@ -99,7 +125,7 @@ fn main() -> Result<()> {
             }
         }
 
-        Commands::Update { service, password } => {
+        Commands::Update {service, password} => {
             let master_password = prompt_password("Enter master password: ", true)?;
             let mut vault = Vault::load(&master_password)?;
             
@@ -113,6 +139,15 @@ fn main() -> Result<()> {
             vault.save(&master_password)?;
 
             println!("Password updated for '{}'", service);
+        }
+
+        Commands::UI => {
+            println!("Launching the UI version...");
+
+            // Spawn and detach the UI
+            launch_ui()?;
+
+            println!("UI launched. You can close this window.");
         }
     }
 

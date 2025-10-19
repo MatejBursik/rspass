@@ -39,10 +39,10 @@ impl Vault {
     fn get_vault_path() -> Result<PathBuf> {
         let home_dir = home_dir().context("Could not find home directory")?;
         
-        let config_dir = home_dir.join(".config").join("rspass");
-        fs::create_dir_all(&config_dir).context("Failed to create config directory")?;
+        let vault_dir = home_dir.join(".rspass");
+        fs::create_dir_all(&vault_dir).context("Failed to create the directory")?;
         
-        Ok(config_dir.join("vault.enc"))
+        Ok(vault_dir.join("vault.enc"))
     }
     
     // Create a new empty vault

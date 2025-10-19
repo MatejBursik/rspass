@@ -3,6 +3,14 @@ name = "rspass"
 version = "0.1.0"
 edition = "2021"
 
+[[bin]]
+name = "rspass"
+path = "src/main.rs"
+
+[[bin]]
+name = "rspass-ui"
+path = "src/ui_main.rs"
+
 [dependencies]
 rand = "0.8.5"
 clap = { version = "4.5.38", features = ["derive"] }
@@ -15,3 +23,4 @@ anyhow = "1.0.98"
 argon2 = "0.5.3"
 aes-gcm = "0.10.3"
 hex = "0.4.3"
+macroquad = "0.4.14"

@@ -12,7 +12,7 @@ A secure command-line password manager written in Rust, featuring encryption and
 ### What RsPass Does NOT Do
 
 - **No Cloud Sync**: Vault is stored locally only
-- **No Interface**: Command-line only (no graphical interface)
+- **No Interface**: Command-line only (working on graphical interface)
 - **No Browser Integration**: Manual copy/paste is required
 
 ## Installation from Source
@@ -23,13 +23,18 @@ cd rspass
 cargo build --release
 ```
 
-The binary will be available at `target/release/rspass`.
+The binaries will be available at `target/release/rspass`. They should remain in the same directory.
+| Binary      | Description          | Path                       |
+| ----------- | -------------------- | -------------------------- |
+| `rspass`    | Command-line tool    | `target/release/rspass`    |
+| `rspass-ui` | Graphical UI version | `target/release/rspass-ui` |
+
 
 ## Storage Location
 
 Vault files are stored at:
-- **Linux/macOS**: `~/.config/rspass/vault.enc`
-- **Windows**: `%USERPROFILE%\.config\rspass\vault.enc`
+- **Linux/macOS**: `~/.rspass/vault.enc`
+- **Windows**: `%USERPROFILE%\.rspass\vault.enc`
 
 
 ## Usage
@@ -78,6 +83,16 @@ rspass update github --password newPassword456
 
 ```bash
 rspass remove github
+```
+
+### Launch UI versoin of RsPass
+
+```bash
+# Launching the UI app from the CLI app
+rspass ui
+
+# Directly launching the UI app
+rspass-ui
 ```
 
 ## Disclaimer

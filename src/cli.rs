@@ -36,5 +36,8 @@ pub enum Commands {
         service: String,
         #[arg(short, long)]
         password: Option<String>
-    }
+    },
+
+    // Open UI version
+    UI
 }
