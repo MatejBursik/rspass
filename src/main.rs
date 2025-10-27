@@ -26,18 +26,18 @@ fn prompt_password(prompt: &str, is_master: bool) -> Result<String> {
         anyhow::bail!("Password cannot be empty");
     }
     
-    // Ensure we have a proper string that will be zeroized
     let result = password.clone();
     password.zeroize();
 
     Ok(result)
 }
 
-pub fn launch_ui() -> std::io::Result<()> {
+fn launch_ui() -> std::io::Result<()> {
     #[cfg(target_os = "windows")]
     {
         use std::os::windows::process::CommandExt;
         const CREATE_NEW_CONSOLE: u32 = 0x00000010;
+
         Command::new("rspass-ui")
             .creation_flags(CREATE_NEW_CONSOLE)
             .stdout(Stdio::null())
@@ -101,12 +101,13 @@ fn main() -> Result<()> {
         Commands::List => {
             let master_password = prompt_password("Enter master password: ", true)?;
             let vault = Vault::load(&master_password)?;
-            
             let services = vault.list_services();
+
             if services.is_empty() {
                 println!("No passwords stored yet");
             } else {
                 println!("Stored services:");
+
                 for service in services {
                     println!(" - {}", service);
                 }
@@ -144,8 +145,7 @@ fn main() -> Result<()> {
         Commands::UI => {
             println!("Launching the UI version...");
 
-            // Spawn and detach the UI
-            launch_ui()?;
+            launch_ui()?; // Spawn and detach the UI
 
             println!("UI launched. You can close this window.");
         }
