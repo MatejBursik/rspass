@@ -168,22 +168,67 @@ async fn main() {
                         let list_refs: Vec<&str> = list_of_passwords.iter().map(|s| s.as_str()).collect();
                         ui.combo_box(hash!(), ": Passwords in the Vault", &list_refs, &mut combobox);
 
-                        // Set username and password variables based on selection in combobox
-                        if let Some(ref v) = vault {
-                            if !list_of_passwords.is_empty() && list_of_passwords[0] != "None" {
-                                let selected_service = &list_of_passwords[combobox];
-                                username = selected_service.clone();
-                                
-                                if let Some(pwd) = v.get_password(selected_service) {
-                                    password = pwd.to_string();
-                                } else {
-                                    password = "Not found".to_string();
+                        ui.label(None, &username);
+                        ui.label(None, &password);
+
+                        if widgets::Button::new("Show").ui(ui) {
+                            // Set username and password variables based on selection in combobox
+                            if let Some(ref v) = vault {
+                                if !list_of_passwords.is_empty() && list_of_passwords[0] != "None" {
+                                    let selected_service = &list_of_passwords[combobox];
+                                    username = selected_service.clone();
+                                    
+                                    if let Some(pwd) = v.get_password(selected_service) {
+                                        password = pwd.to_string();
+                                    } else {
+                                        password = "Not found".to_string();
+                                    }
                                 }
                             }
                         }
 
-                        ui.label(None, &username);
-                        ui.label(None, &password);
+                        if widgets::Button::new("Clear").ui(ui) {
+                            error_message.clear();
+                            success_message.clear();
+                            combobox = 0;
+                            username.clear();
+                            password.clear();
+                        }
+
+                        if widgets::Button::new("Add").ui(ui) {
+                            error_message.clear();
+                            success_message.clear();
+                            add_or_update = AddOrUpdate::Add;
+                            username.clear();
+                            password.clear();
+                            menu_state = MenuState::AddUpdateScreen;
+                        }
+
+                        if widgets::Button::new("Update").ui(ui) {
+                            error_message.clear();
+                            success_message.clear();
+
+                            // Set username and password variables based on selection in combobox
+                            if let Some(ref v) = vault {
+                                if !list_of_passwords.is_empty() && list_of_passwords[0] != "None" {
+                                    let selected_service = &list_of_passwords[combobox];
+                                    username = selected_service.clone();
+                                    
+                                    if let Some(pwd) = v.get_password(selected_service) {
+                                        password = pwd.to_string();
+                                    } else {
+                                        password = "Not found".to_string();
+                                    }
+                                }
+                            }
+
+                            if !list_of_passwords.is_empty() && list_of_passwords[0] != "None" {
+                                add_or_update = AddOrUpdate::Update;
+                                menu_state = MenuState::AddUpdateScreen;
+                            } else {
+                                error_message = "No passwords to update".to_string();
+                            }
+                        }
 
                         if widgets::Button::new("Remove").ui(ui) {
                             error_message.clear();
@@ -227,35 +272,6 @@ async fn main() {
                                 } else {
                                 error_message = "No passwords to delete".to_string();
                             }
-                            }
-                        }
-
-                        if widgets::Button::new("Clear").ui(ui) {
-                            error_message.clear();
-                            success_message.clear();
-                            combobox = 0;
-                            username.clear();
-                            password.clear();
-                        }
-
-                        if widgets::Button::new("Add").ui(ui) {
-                            error_message.clear();
-                            success_message.clear();
-                            add_or_update = AddOrUpdate::Add;
-                            username.clear();
-                            password.clear();
-                            menu_state = MenuState::AddUpdateScreen;
-                        }
-
-                        if widgets::Button::new("Update").ui(ui) {
-                            error_message.clear();
-                            success_message.clear();
-
-                            if !list_of_passwords.is_empty() && list_of_passwords[0] != "None" {
-                                add_or_update = AddOrUpdate::Update;
-                                menu_state = MenuState::AddUpdateScreen;
-                            } else {
-                                error_message = "No passwords to update".to_string();
                             }
                         }
                     }
@@ -341,6 +357,8 @@ async fn main() {
                                                             // Update the list of passwords
                                                             success_message = format!("Password updated for '{}'", username);
                                                             list_of_passwords = v.list_services().iter().map(|s| s.to_string()).collect();
+                                                            username.clear();
+                                                            password.clear();
                                                             menu_state = MenuState::SelectMenu;
                                                         }
 
