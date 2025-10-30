@@ -11,7 +11,8 @@ enum MenuState {
     LogInMenu,
     InitScreen,
     SelectMenu,
-    AddUpdateScreen
+    AddUpdateScreen,
+    RemoveConfirmation
 }
 
 #[derive(PartialEq)]
@@ -24,6 +25,12 @@ enum LogInState {
 enum AddOrUpdate {
     Add,
     Update
+}
+
+#[derive(PartialEq)]
+enum ClearOrShow {
+    Clear,
+    Show
 }
 
 fn conf() -> Conf {
@@ -40,6 +47,7 @@ async fn main() {
     let mut login_state = LogInState::Out;
     let mut menu_state = MenuState::LogInMenu;
     let mut add_or_update = AddOrUpdate::Add;
+    let mut clear_or_show = ClearOrShow::Clear;
 
     let mut vault: Option<Vault> = None;
     let mut master_password = String::new();
@@ -47,6 +55,7 @@ async fn main() {
     let mut password = String::new();
     let mut combobox = 0;
     let mut list_of_passwords: Vec<String> = vec!["None".to_string()];
+    let mut service_to_remove = String::new();
     let mut error_message = String::new();
     let mut success_message = String::new();
 
@@ -90,6 +99,7 @@ async fn main() {
                                     combobox = 0;
                                     username.clear();
                                     password.clear();
+                                    clear_or_show = ClearOrShow::Clear;
                                 }
 
                                 Err(e) => {
@@ -150,6 +160,7 @@ async fn main() {
                             master_password.clear();
                             username.clear();
                             password.clear();
+                            clear_or_show = ClearOrShow::Clear;
                             list_of_passwords = vec!["None".to_string()];
                             combobox = 0;
                             error_message.clear();
@@ -171,36 +182,46 @@ async fn main() {
                         ui.label(None, &username);
                         ui.label(None, &password);
 
-                        if widgets::Button::new("Show").ui(ui) {
-                            // Set username and password variables based on selection in combobox
-                            if let Some(ref v) = vault {
-                                if !list_of_passwords.is_empty() && list_of_passwords[0] != "None" {
-                                    let selected_service = &list_of_passwords[combobox];
-                                    username = selected_service.clone();
-                                    
-                                    if let Some(pwd) = v.get_password(selected_service) {
-                                        password = pwd.to_string();
-                                    } else {
-                                        password = "Not found".to_string();
+                        match clear_or_show {
+                            ClearOrShow::Clear => {
+                                if widgets::Button::new("Show").ui(ui) {
+                                    // Set username and password variables based on selection in combobox
+                                    if let Some(ref v) = vault {
+                                        if !list_of_passwords.is_empty() && list_of_passwords[0] != "None" {
+                                            let selected_service = &list_of_passwords[combobox];
+                                            username = selected_service.clone();
+                                            
+                                            if let Some(pwd) = v.get_password(selected_service) {
+                                                password = pwd.to_string();
+                                            } else {
+                                                password = "Not found".to_string();
+                                            }
+                                        }
                                     }
+
+                                    clear_or_show = ClearOrShow::Show;
+                                }
+                            }
+
+                            ClearOrShow::Show => {
+                                if widgets::Button::new("Clear").ui(ui) {
+                                    error_message.clear();
+                                    success_message.clear();
+                                    combobox = 0;
+                                    username.clear();
+                                    password.clear();
+                                    clear_or_show = ClearOrShow::Clear;
                                 }
                             }
                         }
-
-                        if widgets::Button::new("Clear").ui(ui) {
-                            error_message.clear();
-                            success_message.clear();
-                            combobox = 0;
-                            username.clear();
-                            password.clear();
-                        }
-
+                        
                         if widgets::Button::new("Add").ui(ui) {
                             error_message.clear();
                             success_message.clear();
                             add_or_update = AddOrUpdate::Add;
                             username.clear();
                             password.clear();
+                            clear_or_show = ClearOrShow::Clear;
                             menu_state = MenuState::AddUpdateScreen;
                         }
 
@@ -224,6 +245,7 @@ async fn main() {
 
                             if !list_of_passwords.is_empty() && list_of_passwords[0] != "None" {
                                 add_or_update = AddOrUpdate::Update;
+                                clear_or_show = ClearOrShow::Clear;
                                 menu_state = MenuState::AddUpdateScreen;
                             } else {
                                 error_message = "No passwords to update".to_string();
@@ -234,44 +256,12 @@ async fn main() {
                             error_message.clear();
                             success_message.clear();
 
-                            if let Some(ref mut v) = vault {
-                                if !list_of_passwords.is_empty() && list_of_passwords[0] != "None" {
-                                    let selected_service = list_of_passwords[combobox].clone();
-
-                                    match v.remove_password(&selected_service) {
-                                        Ok(removed) => {
-                                            if removed {
-                                                match v.save(&master_password) {
-                                                    Ok(_) => {
-                                                        // Update the list of passwords
-                                                        success_message = format!("Password removed for '{}'", selected_service);
-                                                        list_of_passwords = v.list_services().iter().map(|s| s.to_string()).collect();
-
-                                                        if list_of_passwords.is_empty() {
-                                                            list_of_passwords = vec!["None".to_string()];
-                                                        }
-
-                                                        combobox = 0;
-                                                        username.clear();
-                                                        password.clear();
-                                                    }
-
-                                                    Err(e) => {
-                                                        error_message = format!("Failed to save: {}", e);
-                                                    }
-                                                }
-                                            } else {
-                                                error_message = format!("No password found for '{}'", selected_service);
-                                            }
-                                        }
-
-                                        Err(e) => {
-                                            error_message = format!("Failed to remove: {}", e);
-                                        }
-                                    }
-                                } else {
+                            if !list_of_passwords.is_empty() && list_of_passwords[0] != "None" {
+                                service_to_remove = list_of_passwords[combobox].clone();
+                                clear_or_show = ClearOrShow::Clear;
+                                menu_state = MenuState::RemoveConfirmation;
+                            } else {
                                 error_message = "No passwords to delete".to_string();
-                            }
                             }
                         }
                     }
@@ -288,6 +278,7 @@ async fn main() {
                             master_password.clear();
                             username.clear();
                             password.clear();
+                            clear_or_show = ClearOrShow::Clear;
                             list_of_passwords = vec!["None".to_string()];
                             combobox = 0;
                             error_message.clear();
@@ -303,8 +294,7 @@ async fn main() {
                         widgets::InputText::new(hash!()).size(vec2(260.0, 30.0)).ui(ui, &mut username);
 
                         ui.label(None, "Password:");
-                        widgets::InputText::new(hash!()).password(true).size(vec2(260.0, 30.0)).ui(ui, &mut password);
-
+                        widgets::InputText::new(hash!()).size(vec2(260.0, 30.0)).ui(ui, &mut password);
                         
                         match add_or_update {
                             AddOrUpdate::Add => {
@@ -324,6 +314,7 @@ async fn main() {
                                                             list_of_passwords = v.list_services().iter().map(|s| s.to_string()).collect();
                                                             username.clear();
                                                             password.clear();
+                                                            clear_or_show = ClearOrShow::Clear;
                                                             menu_state = MenuState::SelectMenu;
                                                         }
 
@@ -359,6 +350,7 @@ async fn main() {
                                                             list_of_passwords = v.list_services().iter().map(|s| s.to_string()).collect();
                                                             username.clear();
                                                             password.clear();
+                                                            clear_or_show = ClearOrShow::Clear;
                                                             menu_state = MenuState::SelectMenu;
                                                         }
 
@@ -376,15 +368,70 @@ async fn main() {
                                     }
                                 }
                             }
-
                         }
 
                         if widgets::Button::new("Cancel").ui(ui) {
                             error_message.clear();
                             username.clear();
                             password.clear();
+                            clear_or_show = ClearOrShow::Clear;
                             menu_state = MenuState::SelectMenu;
                         }
+                    }
+                });
+            }
+
+            MenuState::RemoveConfirmation => {
+                root_ui().window(hash!(), vec2(100.0, 100.0), vec2(400.0, 400.0), |ui| {
+                    ui.label(None, &format!("Do you want to REMOVE password for '{}'?", service_to_remove));
+                    ui.label(None, "This action cannot be undone.");
+                    
+                    if widgets::Button::new("Confirm").ui(ui) {
+                        if let Some(ref mut v) = vault {
+                            match v.remove_password(&service_to_remove) {
+                                Ok(removed) => {
+                                    if removed {
+                                        match v.save(&master_password) {
+                                            Ok(_) => {
+                                                // Update the list of passwords
+                                                success_message = format!("Password removed for '{}'", service_to_remove);
+                                                list_of_passwords = v.list_services().iter().map(|s| s.to_string()).collect();
+
+                                                if list_of_passwords.is_empty() {
+                                                    list_of_passwords = vec!["None".to_string()];
+                                                }
+
+                                                service_to_remove.clear();
+                                                combobox = 0;
+                                                username.clear();
+                                                password.clear();
+                                                clear_or_show = ClearOrShow::Clear;
+                                                menu_state = MenuState::SelectMenu;
+                                            }
+
+                                            Err(e) => {
+                                                error_message = format!("Failed to save: {}", e);
+                                            }
+                                        }
+                                    } else {
+                                        error_message = format!("No password found for '{}'", service_to_remove);
+                                    }
+                                }
+
+                                Err(e) => {
+                                    error_message = format!("Failed to remove: {}", e);
+                                }
+                            }
+                        }
+                    }
+
+                    if widgets::Button::new("Cancel").ui(ui) {
+                        service_to_remove.clear();
+                        combobox = 0;
+                        username.clear();
+                        password.clear();
+                        clear_or_show = ClearOrShow::Clear;
+                        menu_state = MenuState::SelectMenu;
                     }
                 });
             }
