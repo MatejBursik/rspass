@@ -1,5 +1,6 @@
 use macroquad::prelude::*;
 use macroquad::ui::{hash, root_ui, widgets};
+use clipboard::{ClipboardContext, ClipboardProvider};
 
 mod encrypt;
 mod vault;
@@ -49,6 +50,7 @@ async fn main() {
     let mut add_or_update = AddOrUpdate::Add;
     let mut clear_or_show = ClearOrShow::Clear;
 
+    let mut clipboard_ctx: ClipboardContext = ClipboardProvider::new().unwrap();
     let mut vault: Option<Vault> = None;
     let mut master_password = String::new();
     let mut username = String::new();
@@ -179,8 +181,13 @@ async fn main() {
                         let list_refs: Vec<&str> = list_of_passwords.iter().map(|s| s.as_str()).collect();
                         ui.combo_box(hash!(), ": Passwords in the Vault", &list_refs, &mut combobox);
 
-                        ui.label(None, &username);
-                        ui.label(None, &password);
+                        if widgets::Button::new(username.as_str()).ui(ui) {
+                            clipboard_ctx.set_contents(username.clone()).unwrap();
+                        }
+
+                        if widgets::Button::new(password.as_str()).ui(ui) {
+                            clipboard_ctx.set_contents(password.clone()).unwrap();
+                        }
 
                         match clear_or_show {
                             ClearOrShow::Clear => {
@@ -207,7 +214,6 @@ async fn main() {
                                 if widgets::Button::new("Clear").ui(ui) {
                                     error_message.clear();
                                     success_message.clear();
-                                    combobox = 0;
                                     username.clear();
                                     password.clear();
                                     clear_or_show = ClearOrShow::Clear;

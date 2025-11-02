@@ -1,18 +1,17 @@
 # RsPass - CLI Password Manager
 
-A secure command-line password manager written in Rust, featuring encryption and safe memory handling.
+A simple and secure password manager written in Rust. Usable with both CLI and GUI.
 
 ## Features
 
 - **Secure Storage**: Passwords are encrypted using AES-256-GCM
 - **Key Hashing**: Master password is hashed with Argon2
-- **Simple CLI**: Easy-to-use command-line interface
+- **Simple CLI & GUI**: User friendly command-line and graphical interface
 - **Cross-Platform**: Compatible with Windows, macOS, and Linux
 
 ### What RsPass Does NOT Do
 
 - **No Cloud Sync**: Vault is stored locally only
-- **No Interface**: Command-line only (working on graphical interface)
 - **No Browser Integration**: Manual copy/paste is required
 
 ## Installation from Source
@@ -94,6 +93,8 @@ rspass ui
 # Directly launching the UI app
 rspass-ui
 ```
+
+The UI application itself is very simple and intuitive to use.
 
 ## Disclaimer
 
