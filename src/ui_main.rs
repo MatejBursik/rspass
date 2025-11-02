@@ -58,29 +58,29 @@ async fn main() {
     let mut combobox = 0;
     let mut list_of_passwords: Vec<String> = vec!["None".to_string()];
     let mut service_to_remove = String::new();
-    let mut error_message = String::new();
-    let mut success_message = String::new();
+    let mut message = String::new();
 
     loop {
         clear_background(GRAY);
 
         match menu_state {
             MenuState::LogInMenu => {
-                root_ui().window(hash!(), vec2(100.0, 100.0), vec2(400.0, 400.0), |ui| {
+                root_ui().window(hash!(), vec2(50.0, 50.0), vec2(500.0, 500.0), |ui| {
                     ui.label(None, "Master Password:");
                     widgets::InputText::new(hash!()).password(true).size(vec2(260.0, 30.0)).ui(ui, &mut master_password);
 
-                    if !error_message.is_empty() {
-                        ui.label(None, &format!("Error: {}", error_message));
+                    if !message.is_empty() {
+                        ui.label(None, &format!("{}", message));
                     }
 
                     if widgets::Button::new("Create Vault").ui(ui) {
-                        error_message.clear();
+                        message.clear();
+                        master_password.clear();
                         menu_state = MenuState::InitScreen;
                     }
 
                     if widgets::Button::new("Log In").ui(ui) {
-                        error_message.clear();
+                        message.clear();
 
                         if !master_password.is_empty() {
                             match Vault::load(&master_password) {
@@ -105,28 +105,28 @@ async fn main() {
                                 }
 
                                 Err(e) => {
-                                    error_message = format!("Failed to load vault: {}", e);
+                                    message = format!("Error: Failed to load vault ({})", e);
                                 }
                             }
                         } else {
-                            error_message = "Master password cannot be empty".to_string();
+                            message = "Error: Master password cannot be empty".to_string();
                         }
                     }    
                 });
             }
 
             MenuState::InitScreen => {
-                root_ui().window(hash!(), vec2(100.0, 100.0), vec2(400.0, 400.0), |ui| {
+                root_ui().window(hash!(), vec2(50.0, 50.0), vec2(500.0, 500.0), |ui| {
                     ui.label(None, "Create New Vault");
                     ui.label(None, "Master Password:");
                     widgets::InputText::new(hash!()).password(true).size(vec2(260.0, 30.0)).ui(ui, &mut master_password);
 
-                    if !error_message.is_empty() {
-                        ui.label(None, &format!("Error: {}", error_message));
+                    if !message.is_empty() {
+                        ui.label(None, &format!("{}", message));
                     }
 
                     if widgets::Button::new("Create").ui(ui) {
-                        error_message.clear();
+                        message.clear();
 
                         if !master_password.is_empty() {
                             match Vault::create_new(&master_password) {
@@ -136,16 +136,16 @@ async fn main() {
                                 }
 
                                 Err(e) => {
-                                    error_message = format!("Failed to create vault: {}", e);
+                                    message = format!("Error: Failed to create vault ({})", e);
                                 }
                             }
                         } else {
-                            error_message = "Master password cannot be empty".to_string();
+                            message = "Error: Master password cannot be empty".to_string();
                         }
                     }
 
                     if widgets::Button::new("Cancel").ui(ui) {
-                        error_message.clear();
+                        message.clear();
                         master_password.clear();
                         menu_state = MenuState::LogInMenu;
                     }
@@ -153,7 +153,7 @@ async fn main() {
             }
 
             MenuState::SelectMenu => {
-                root_ui().window(hash!(), vec2(100.0, 100.0), vec2(400.0, 400.0), |ui| {
+                root_ui().window(hash!(), vec2(50.0, 50.0), vec2(500.0, 500.0), |ui| {
                     if login_state == LogInState::In {
                         if widgets::Button::new("Log Out").ui(ui) {
                             vault = None;
@@ -165,28 +165,26 @@ async fn main() {
                             clear_or_show = ClearOrShow::Clear;
                             list_of_passwords = vec!["None".to_string()];
                             combobox = 0;
-                            error_message.clear();
-                            success_message.clear();
+                            message.clear();
                         }
 
-                        if !success_message.is_empty() {
-                            ui.label(None, &format!("Success: {}", success_message));
-                        }
-
-                        if !error_message.is_empty() {
-                            ui.label(None, &format!("Error: {}", error_message));
+                        if !message.is_empty() {
+                            ui.label(None, &format!("{}", message));
                         }
 
                         // List of passwords
                         let list_refs: Vec<&str> = list_of_passwords.iter().map(|s| s.as_str()).collect();
                         ui.combo_box(hash!(), ": Passwords in the Vault", &list_refs, &mut combobox);
 
+                        // Username and Password copy buttons
                         if widgets::Button::new(username.as_str()).ui(ui) {
                             clipboard_ctx.set_contents(username.clone()).unwrap();
+                            message = format!("Success: Username copied into clipboard");
                         }
 
                         if widgets::Button::new(password.as_str()).ui(ui) {
                             clipboard_ctx.set_contents(password.clone()).unwrap();
+                            message = format!("Success: Password copied into clipboard");
                         }
 
                         match clear_or_show {
@@ -212,8 +210,7 @@ async fn main() {
 
                             ClearOrShow::Show => {
                                 if widgets::Button::new("Clear").ui(ui) {
-                                    error_message.clear();
-                                    success_message.clear();
+                                    message.clear();
                                     username.clear();
                                     password.clear();
                                     clear_or_show = ClearOrShow::Clear;
@@ -222,8 +219,7 @@ async fn main() {
                         }
                         
                         if widgets::Button::new("Add").ui(ui) {
-                            error_message.clear();
-                            success_message.clear();
+                            message.clear();
                             add_or_update = AddOrUpdate::Add;
                             username.clear();
                             password.clear();
@@ -232,8 +228,7 @@ async fn main() {
                         }
 
                         if widgets::Button::new("Update").ui(ui) {
-                            error_message.clear();
-                            success_message.clear();
+                            message.clear();
 
                             // Set username and password variables based on selection in combobox
                             if let Some(ref v) = vault {
@@ -254,20 +249,19 @@ async fn main() {
                                 clear_or_show = ClearOrShow::Clear;
                                 menu_state = MenuState::AddUpdateScreen;
                             } else {
-                                error_message = "No passwords to update".to_string();
+                                message = "Error: No passwords to update".to_string();
                             }
                         }
 
                         if widgets::Button::new("Remove").ui(ui) {
-                            error_message.clear();
-                            success_message.clear();
+                            message.clear();
 
                             if !list_of_passwords.is_empty() && list_of_passwords[0] != "None" {
                                 service_to_remove = list_of_passwords[combobox].clone();
                                 clear_or_show = ClearOrShow::Clear;
                                 menu_state = MenuState::RemoveConfirmation;
                             } else {
-                                error_message = "No passwords to delete".to_string();
+                                message = "Error: No passwords to delete".to_string();
                             }
                         }
                     }
@@ -275,7 +269,7 @@ async fn main() {
             }
 
             MenuState::AddUpdateScreen => {
-                root_ui().window(hash!(), vec2(100.0, 100.0), vec2(400.0, 400.0), |ui| {
+                root_ui().window(hash!(), vec2(50.0, 50.0), vec2(500.0, 500.0), |ui| {
                     if login_state == LogInState::In {
                         if widgets::Button::new("Log Out").ui(ui) {
                             vault = None;
@@ -287,12 +281,11 @@ async fn main() {
                             clear_or_show = ClearOrShow::Clear;
                             list_of_passwords = vec!["None".to_string()];
                             combobox = 0;
-                            error_message.clear();
-                            success_message.clear();
+                            message.clear();
                         }
 
-                        if !error_message.is_empty() {
-                            ui.label(None, &format!("Error: {}", error_message));
+                        if !message.is_empty() {
+                            ui.label(None, &format!("{}", message));
                         }
 
                         // Text fields: Username, Password
@@ -305,10 +298,10 @@ async fn main() {
                         match add_or_update {
                             AddOrUpdate::Add => {
                                 if widgets::Button::new("Add").ui(ui) {
-                                    error_message.clear();
+                                    message.clear();
 
                                     if username.is_empty() || password.is_empty() {
-                                        error_message = "Service name and password cannot be empty".to_string();
+                                        message = "Error: Service name and password cannot be empty".to_string();
                                     } else {
                                         if let Some(ref mut v) = vault {
                                             match v.add_password(&username, &password) {
@@ -316,7 +309,7 @@ async fn main() {
                                                     match v.save(&master_password) {
                                                         Ok(_) => {
                                                             // Update the list of passwords
-                                                            success_message = format!("Password added for '{}'", username);
+                                                            message = format!("Success: Password added for '{}'", username);
                                                             list_of_passwords = v.list_services().iter().map(|s| s.to_string()).collect();
                                                             username.clear();
                                                             password.clear();
@@ -325,13 +318,13 @@ async fn main() {
                                                         }
 
                                                         Err(e) => {
-                                                            error_message = format!("Failed to save: {}", e);
+                                                            message = format!("Error: Failed to save ({})", e);
                                                         }
                                                     }
                                                 }
 
                                                 Err(e) => {
-                                                    error_message = format!("Failed to add: {}", e);
+                                                    message = format!("Error: Failed to add ({})", e);
                                                 }
                                             }
                                         }
@@ -341,10 +334,10 @@ async fn main() {
 
                             AddOrUpdate::Update => {
                                 if widgets::Button::new("Update").ui(ui) {
-                                    error_message.clear();
+                                    message.clear();
 
                                     if username.is_empty() || password.is_empty() {
-                                        error_message = "Service name and password cannot be empty".to_string();
+                                        message = "Error: Service name and password cannot be empty".to_string();
                                     } else {
                                         if let Some(ref mut v) = vault {
                                             match v.update_password(&username, &password) {
@@ -352,7 +345,7 @@ async fn main() {
                                                     match v.save(&master_password) {
                                                         Ok(_) => {
                                                             // Update the list of passwords
-                                                            success_message = format!("Password updated for '{}'", username);
+                                                            message = format!("Success: Password updated for '{}'", username);
                                                             list_of_passwords = v.list_services().iter().map(|s| s.to_string()).collect();
                                                             username.clear();
                                                             password.clear();
@@ -361,13 +354,13 @@ async fn main() {
                                                         }
 
                                                         Err(e) => {
-                                                            error_message = format!("Failed to save: {}", e);
+                                                            message = format!("Error: Failed to save ({})", e);
                                                         }
                                                     }
                                                 }
 
                                                 Err(e) => {
-                                                    error_message = format!("Failed to update: {}", e);
+                                                    message = format!("Error: Failed to update ({})", e);
                                                 }
                                             }
                                         }
@@ -377,7 +370,7 @@ async fn main() {
                         }
 
                         if widgets::Button::new("Cancel").ui(ui) {
-                            error_message.clear();
+                            message.clear();
                             username.clear();
                             password.clear();
                             clear_or_show = ClearOrShow::Clear;
@@ -388,7 +381,7 @@ async fn main() {
             }
 
             MenuState::RemoveConfirmation => {
-                root_ui().window(hash!(), vec2(100.0, 100.0), vec2(400.0, 400.0), |ui| {
+                root_ui().window(hash!(), vec2(50.0, 50.0), vec2(500.0, 500.0), |ui| {
                     ui.label(None, &format!("Do you want to REMOVE password for '{}'?", service_to_remove));
                     ui.label(None, "This action cannot be undone.");
                     
@@ -400,7 +393,7 @@ async fn main() {
                                         match v.save(&master_password) {
                                             Ok(_) => {
                                                 // Update the list of passwords
-                                                success_message = format!("Password removed for '{}'", service_to_remove);
+                                                message = format!("Success: Password removed for '{}'", service_to_remove);
                                                 list_of_passwords = v.list_services().iter().map(|s| s.to_string()).collect();
 
                                                 if list_of_passwords.is_empty() {
@@ -416,16 +409,16 @@ async fn main() {
                                             }
 
                                             Err(e) => {
-                                                error_message = format!("Failed to save: {}", e);
+                                                message = format!("Error: Failed to save ({})", e);
                                             }
                                         }
                                     } else {
-                                        error_message = format!("No password found for '{}'", service_to_remove);
+                                        message = format!("Error: No password found for '{}'", service_to_remove);
                                     }
                                 }
 
                                 Err(e) => {
-                                    error_message = format!("Failed to remove: {}", e);
+                                    message = format!("Error: Failed to remove ({})", e);
                                 }
                             }
                         }
